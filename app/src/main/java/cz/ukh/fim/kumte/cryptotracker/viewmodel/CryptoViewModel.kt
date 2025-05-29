@@ -19,9 +19,10 @@ class CryptoViewModel : ViewModel() {
         fetchCoins()
     }
 
-    private fun fetchCoins() {
+    fun fetchCoins() {
         viewModelScope.launch {
             try {
+                println("Loading data from Coin Gecko API...")
                 _coins.value = repository.getCoins()
             } catch (e: Exception) {
                 e.printStackTrace()

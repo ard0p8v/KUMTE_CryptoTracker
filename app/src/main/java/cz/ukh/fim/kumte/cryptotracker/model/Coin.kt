@@ -1,6 +1,9 @@
 package cz.ukh.fim.kumte.cryptotracker.model
 
 import com.google.gson.annotations.SerializedName
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
 data class Coin(
     val id: String,
