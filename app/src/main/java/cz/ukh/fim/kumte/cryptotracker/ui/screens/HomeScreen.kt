@@ -1,5 +1,6 @@
 package cz.ukh.fim.kumte.cryptotracker.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,8 +20,11 @@ import cz.ukh.fim.kumte.cryptotracker.viewmodel.CryptoViewModel
 import coil.compose.AsyncImage
 
 @Composable
-fun HomeScreen() {
-    val viewModel: CryptoViewModel = viewModel()
+fun HomeScreen(
+    viewModel: CryptoViewModel,
+    onRefresh: () -> Unit,
+    onCoinClick: (String) -> Unit
+) {
     val coins = viewModel.coins.collectAsState()
 
     Column(
@@ -50,18 +54,19 @@ fun HomeScreen() {
             verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             items(coins.value) { coin ->
-                CoinItem(coin)
+                CoinItem(coin = coin, onClick = { onCoinClick(coin.id) })
             }
         }
     }
 }
 
 @Composable
-fun CoinItem(coin: Coin) {
+fun CoinItem(coin: Coin, onClick: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(5.dp),
+            .padding(5.dp)
+            .clickable { onClick(coin.id) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A2A)),
         elevation = CardDefaults.cardElevation(4.dp)
