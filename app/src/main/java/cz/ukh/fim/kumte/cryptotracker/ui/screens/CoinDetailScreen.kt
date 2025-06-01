@@ -1,13 +1,14 @@
 package cz.ukh.fim.kumte.cryptotracker.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -23,16 +24,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
+import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
+import com.patrykandpatrick.vico.compose.chart.Chart
+import com.patrykandpatrick.vico.compose.chart.line.lineChart
+import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
+import com.patrykandpatrick.vico.core.entry.entryOf
 import cz.ukh.fim.kumte.cryptotracker.repository.CryptoRepository
 import cz.ukh.fim.kumte.cryptotracker.util.formatNumberWithSpace
 import cz.ukh.fim.kumte.cryptotracker.viewmodel.CoinDetailViewModel
 import cz.ukh.fim.kumte.cryptotracker.viewmodel.CoinDetailViewModelFactory
-import com.patrykandpatrick.vico.compose.chart.Chart
-import com.patrykandpatrick.vico.compose.chart.line.lineChart
-import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
-import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
-import com.patrykandpatrick.vico.core.entry.FloatEntry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,10 +82,6 @@ fun CoinDetailScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 marketChart?.let { chartData ->
-                    val entries = chartData.prices.mapIndexed { index, price ->
-                        FloatEntry(x = index.toFloat(), y = price[1].toFloat())
-                    }
-                    val chartEntryModelProducer = ChartEntryModelProducer(entries)
 
                     Text(
                         text = "Price development in the last 7 days",
@@ -93,15 +90,28 @@ fun CoinDetailScreen(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    Chart(
-                        chart = lineChart(),
-                        chartModelProducer = chartEntryModelProducer,
-                        startAxis = rememberStartAxis(),
-                        bottomAxis = rememberBottomAxis(),
+                    val minY = (chartData.prices.minOf { it[1] } * 0.95).toFloat()
+                    val entries = buildList {
+                        add(entryOf(x = 0f, y = minY)) // Přidej minimální hodnotu o 5% nižší
+                        addAll(chartData.prices.mapIndexed { index, price ->
+                            entryOf(x = index.toFloat(), y = price[1].toFloat())
+                        })
+                    }
+
+                    val chartEntryModelProducer = ChartEntryModelProducer(entries)
+
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
-                    )
+                            .background(Color(0xFFBABABA)) // Světlejší než okolí
+                    ) {
+                        Chart(
+                            chart = lineChart(),
+                            chartModelProducer = chartEntryModelProducer,
+                            startAxis = rememberStartAxis(),
+                            bottomAxis = rememberBottomAxis()
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

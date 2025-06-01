@@ -33,6 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import cz.ukh.fim.kumte.cryptotracker.repository.CryptoRepository
 import cz.ukh.fim.kumte.cryptotracker.ui.screens.CoinDetailScreen
+import cz.ukh.fim.kumte.cryptotracker.ui.screens.SettingsScreen
 import cz.ukh.fim.kumte.cryptotracker.viewmodel.CoinDetailViewModel
 import cz.ukh.fim.kumte.cryptotracker.viewmodel.CoinDetailViewModelFactory
 
@@ -73,10 +74,13 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(
                                 viewModel = viewModel,
                                 onRefresh = { viewModel.fetchCoins() },
-                                onCoinClick = { coinId ->
-                                    navController.navigate("coinDetail/$coinId")
-                                }
+                                onCoinClick = { coinId -> navController.navigate("coinDetail/$coinId") },
+                                onSettingsClick = { navController.navigate("settings") }
                             )
+                        }
+
+                        composable("settings") {
+                            SettingsScreen(onBackClick = { navController.popBackStack() })
                         }
 
                         composable("coinDetail/{coinId}") { backStackEntry ->
@@ -112,15 +116,15 @@ fun LogoView() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(3.dp),
-        contentAlignment = Alignment.Center
+            .padding(start = 2.dp, top = 2.dp, bottom = 2.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo aplikace",
             modifier = Modifier
-                .width(250.dp)
-                .height(100.dp)
+                .width(120.dp)
+                .height(45.dp)
         )
     }
 }

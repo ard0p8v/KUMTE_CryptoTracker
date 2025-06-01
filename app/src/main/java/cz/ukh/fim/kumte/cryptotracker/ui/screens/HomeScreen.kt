@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,49 +14,67 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.ukh.fim.kumte.cryptotracker.LogoView
 import cz.ukh.fim.kumte.cryptotracker.model.Coin
 import cz.ukh.fim.kumte.cryptotracker.util.formatNumberWithSpace
 import cz.ukh.fim.kumte.cryptotracker.viewmodel.CryptoViewModel
 import coil.compose.AsyncImage
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: CryptoViewModel,
     onRefresh: () -> Unit,
-    onCoinClick: (String) -> Unit
+    onCoinClick: (String) -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     val coins = viewModel.coins.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        LogoView()
-
-        Button(
-            onClick = { viewModel.fetchCoins() },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF00D1B2),
-                contentColor = Color.White
-            ),
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { LogoView() },
+                actions = {
+                    IconButton(onClick = { onSettingsClick() }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF2A2A2A))
+            )
+        },
+        containerColor = Color(0xFF1A1A1A)
+    ) { padding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
+                .padding(padding)
+                .padding(16.dp)
         ) {
-            Text("REFRESH DATA")
-        }
+            Button(
+                onClick = { viewModel.fetchCoins() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF00D1B2),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text("REFRESH DATA")
+            }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-            items(coins.value) { coin ->
-                CoinItem(coin = coin, onClick = { onCoinClick(coin.id) })
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                items(coins.value) { coin ->
+                    CoinItem(coin = coin, onClick = { onCoinClick(coin.id) })
+                }
             }
         }
     }
