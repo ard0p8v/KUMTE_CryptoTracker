@@ -40,7 +40,9 @@ import cz.ukh.fim.kumte.cryptotracker.viewmodel.CoinDetailViewModelFactory
 fun CoinDetailScreen(
     coinId: String,
     viewModel: CoinDetailViewModel = viewModel(factory = CoinDetailViewModelFactory(CryptoRepository())),
-    navController: NavController
+    navController: NavController,
+    selectedCurrency: String,
+    czkRate: Double
 ) {
     val coinDetail = viewModel.coinDetail.collectAsState().value
     val marketChart = viewModel.marketChart.collectAsState().value
@@ -53,18 +55,18 @@ fun CoinDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = coinDetail?.name ?: "Detail", color = Color(0xFF00D1B2)) },
+                title = { Text(text = coinDetail?.name ?: "Detail", color = MaterialTheme.colorScheme.primary) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF2A2A2A)
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color(0xFF1A1A1A)
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         coinDetail?.let { detail ->
             Column(
@@ -74,27 +76,31 @@ fun CoinDetailScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
-                Text(text = detail.symbol.uppercase(), color = Color.LightGray, style = MaterialTheme.typography.bodySmall)
-                Text(text = detail.name, color = Color(0xFF00D1B2), style = MaterialTheme.typography.titleLarge)
+                Text(text = detail.symbol.uppercase(), color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodySmall)
+                Text(text = detail.name, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = detail.description["en"] ?: "No description available.", color = Color.White)
+                Text(text = detail.description["en"] ?: "No description available.", color = MaterialTheme.colorScheme.onBackground)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 marketChart?.let { chartData ->
-
                     Text(
                         text = "Price development in the last 7 days",
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFF00D1B2),
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
                     val minY = (chartData.prices.minOf { it[1] } * 0.95).toFloat()
                     val entries = buildList {
-                        add(entryOf(x = 0f, y = minY)) // Přidej minimální hodnotu o 5% nižší
+                        add(entryOf(x = 0f, y = minY))
                         addAll(chartData.prices.mapIndexed { index, price ->
-                            entryOf(x = index.toFloat(), y = price[1].toFloat())
+                            val adjustedPrice = if (selectedCurrency.lowercase() == "czk") {
+                                price[1] * czkRate
+                            } else {
+                                price[1]
+                            }
+                            entryOf(x = index.toFloat(), y = adjustedPrice.toFloat())
                         })
                     }
 
@@ -103,7 +109,7 @@ fun CoinDetailScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFBABABA)) // Světlejší než okolí
+                            .background(MaterialTheme.colorScheme.surface)
                     ) {
                         Chart(
                             chart = lineChart(),
@@ -116,13 +122,27 @@ fun CoinDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                val currentPrice = if (selectedCurrency.lowercase() == "czk") {
+                    (detail.marketData.currentPrice["usd"] ?: 0.0) * czkRate
+                } else {
+                    detail.marketData.currentPrice["usd"] ?: 0.0
+                }
+
+                val marketCap = if (selectedCurrency.lowercase() == "czk") {
+                    (detail.marketData.marketCap["usd"] ?: 0.0) * czkRate
+                } else {
+                    detail.marketData.marketCap["usd"] ?: 0.0
+                }
+
+                val currencySuffix = selectedCurrency.uppercase()
+
                 Text(
-                    text = "Current Price: ${formatNumberWithSpace(detail.marketData.currentPrice["usd"] ?: 0.0)} USD",
-                    color = Color(0xFF00D1B2)
+                    text = "Current Price: ${formatNumberWithSpace(currentPrice)} $currencySuffix",
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Market Cap: ${formatNumberWithSpace(detail.marketData.marketCap["usd"] ?: 0.0)} USD",
-                    color = Color(0xFF00D1B2)
+                    text = "Market Cap: ${formatNumberWithSpace(marketCap)} $currencySuffix",
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = "24h Change: ${String.format("%.2f", detail.marketData.priceChangePercentage24h)} %",
@@ -139,4 +159,6 @@ fun CoinDetailScreen(
         }
     }
 }
+
+
 

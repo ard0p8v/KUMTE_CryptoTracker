@@ -7,33 +7,39 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import cz.ukh.fim.kumte.cryptotracker.viewmodel.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBackClick: () -> Unit) {
+fun SettingsScreen(
+    selectedCurrency: String,
+    onCurrencyChange: (String) -> Unit,
+    selectedThemeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    onBackClick: () -> Unit
+) {
     var notificationsEnabled by remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nastavení", color = Color(0xFF00D1B2)) },
+                title = { Text("Crypto Tracker settings", color = MaterialTheme.colorScheme.primary) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Zpět",
-                            tint = Color.White
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF2A2A2A)
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color(0xFF1A1A1A)
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -43,26 +49,53 @@ fun SettingsScreen(onBackClick: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Nastavení aplikace",
+                text = "Currency selection",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF00D1B2)
+                color = MaterialTheme.colorScheme.primary
             )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Povolit notifikace", color = Color.White)
-                Switch(
-                    checked = notificationsEnabled,
-                    onCheckedChange = { notificationsEnabled = it },
-                    colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFF00D1B2))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = selectedCurrency.equals("USD", ignoreCase = true),
+                    onClick = { onCurrencyChange("USD") },
+                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                 )
+                Text(text = "USD", color = MaterialTheme.colorScheme.onBackground)
             }
 
-            // Další nastavení sem...
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = selectedCurrency.equals("CZK", ignoreCase = true),
+                    onClick = { onCurrencyChange("CZK") },
+                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                )
+                Text(text = "CZK", color = MaterialTheme.colorScheme.onBackground)
+            }
 
+            Text(
+                text = "Mode selection",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = selectedThemeMode == ThemeMode.LIGHT,
+                    onClick = { onThemeModeChange(ThemeMode.LIGHT) },
+                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                )
+                Text("Light", color = MaterialTheme.colorScheme.onBackground)
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = selectedThemeMode == ThemeMode.DARK,
+                    onClick = { onThemeModeChange(ThemeMode.DARK) },
+                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                )
+                Text("Dark", color = MaterialTheme.colorScheme.onBackground)
+            }
         }
     }
 }
+
