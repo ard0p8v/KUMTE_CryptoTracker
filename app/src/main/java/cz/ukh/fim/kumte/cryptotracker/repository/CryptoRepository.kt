@@ -28,6 +28,10 @@ class CryptoRepository {
         val lines = response.bodyAsText().lines()
 
         val usdLine = lines.find { it.contains("|USD|") }
-        return usdLine?.split("|")?.get(4)?.replace(",", ".")?.toDoubleOrNull()
+        return usdLine
+            ?.split("\\|".toRegex())
+            ?.getOrNull(4)
+            ?.replace(",", ".")
+            ?.toDoubleOrNull()
     }
 }

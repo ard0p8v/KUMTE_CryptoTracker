@@ -7,5 +7,6 @@ data class CoinDetail(
     @SerializedName("name") val name: String,
     @SerializedName("symbol") val symbol: String,
     @SerializedName("description") val description: Map<String, String>,
-    @SerializedName("market_data") val marketData: MarketData
+    @SerializedName("market_data") val marketData: MarketData,
+    @SerializedName("image") val image: CoinImage
 )

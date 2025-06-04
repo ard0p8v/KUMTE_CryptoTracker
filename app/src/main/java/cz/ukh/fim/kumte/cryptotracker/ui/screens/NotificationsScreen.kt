@@ -27,21 +27,24 @@ import cz.ukh.fim.kumte.cryptotracker.model.PriceAlert
 @Composable
 fun NotificationsScreen(
     onBackClick: () -> Unit,
-    shakeEnabled: Boolean,
-    onShakeChange: (Boolean) -> Unit,
     priceAlerts: List<PriceAlert>,
     onAlertChange: (PriceAlert) -> Unit,
     onAlertRemove: (String) -> Unit,
     onAlertAdd: (PriceAlert) -> Unit,
-    availableCoins: List<Coin>
+    availableCoins: List<Coin>,
+    selectedInterval: Long,
+    onIntervalChange: (Long) -> Unit,
+    dataRefreshInterval: Long,
+    onDataRefreshIntervalChange: (Long) -> Unit
 ) {
     var selectedCoinId by remember { mutableStateOf("") }
     var targetPriceInput by remember { mutableStateOf("") }
+    var selectedInterval by remember { mutableLongStateOf(selectedInterval) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crypto Tracker notifications", color = MaterialTheme.colorScheme.primary) },
+                title = { Text("Crypto Tracker Notifications", color = MaterialTheme.colorScheme.primary) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onPrimary)
@@ -62,15 +65,95 @@ fun NotificationsScreen(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Shake to refresh", color = MaterialTheme.colorScheme.onBackground)
-                Switch(
-                    checked = shakeEnabled,
-                    onCheckedChange = onShakeChange,
-                    colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary)
+                Text(
+                    text = "Get notifications interval",
+                    color = MaterialTheme.colorScheme.onBackground
                 )
+
+                Spacer(modifier = Modifier.weight(1f)) // Odsune tlačítko doprava
+
+                val options = listOf(
+                    15_000L to "15 seconds",
+                    30_000L to "30 seconds",
+                    60_000L to "1 minute",
+                    300_000L to "5 minutes"
+                )
+
+                var intervalDropdownExpanded by remember { mutableStateOf(false) }
+
+                Box {
+                    OutlinedButton(onClick = { intervalDropdownExpanded = true }) {
+                        Text(
+                            text = options.firstOrNull { it.first == selectedInterval }?.second ?: "Select",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = intervalDropdownExpanded,
+                        onDismissRequest = { intervalDropdownExpanded = false }
+                    ) {
+                        options.forEach { (ms, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    selectedInterval = ms
+                                    onIntervalChange(ms)
+                                    intervalDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Data refresh interval",
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                val options = listOf(
+                    120_000L to "2 minutes",
+                    300_000L to "5 minutes",
+                    600_000L to "10 minutes",
+                    1800_000L to "30 minutes"
+                )
+
+                var dropdownExpanded by remember { mutableStateOf(false) }
+                var localInterval by remember { mutableStateOf(dataRefreshInterval) }
+
+                Box {
+                    OutlinedButton(onClick = { dropdownExpanded = true }) {
+                        Text(
+                            text = options.firstOrNull { it.first == localInterval }?.second ?: "Select",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false }
+                    ) {
+                        options.forEach { (ms, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    localInterval = ms
+                                    onDataRefreshIntervalChange(ms)
+                                    dropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
             Text(
@@ -84,8 +167,6 @@ fun NotificationsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                var expanded by remember { mutableStateOf(false) }
-
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,

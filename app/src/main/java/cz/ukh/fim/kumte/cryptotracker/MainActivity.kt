@@ -51,6 +51,7 @@ import cz.ukh.fim.kumte.cryptotracker.ui.screens.SettingsScreen
 import cz.ukh.fim.kumte.cryptotracker.viewmodel.CoinDetailViewModel
 import cz.ukh.fim.kumte.cryptotracker.viewmodel.CoinDetailViewModelFactory
 import cz.ukh.fim.kumte.cryptotracker.viewmodel.ThemeMode
+import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : ComponentActivity() {
 
@@ -75,8 +76,11 @@ class MainActivity : ComponentActivity() {
             println("Shake detected (simulation)..")
             viewModel.fetchCoins()
             viewModel.checkAlerts { alert ->
-                println("${alert.coinName} překročil cenu ${alert.targetPrice}!")
-                // Zde můžeš dát Toast, Notification, AlertDialog...
+                showPriceAlertNotification(
+                    context = this@MainActivity,
+                    title = "Price Alert: ${alert.coinName}!",
+                    message = "It's time to buy! The price has reached the desired value ${alert.targetPrice}."
+                )
             }
         }
 
@@ -88,26 +92,41 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        lifecycleScope.launch {
+        // shake detector testing
+        /*lifecycleScope.launch {
             delay(60_000)
             println("Simulated shake after 1 minute..")
             shakeDetector.triggerShake()
             viewModel.checkAlerts { alert ->
                 println("${alert.coinName} exceeded the price ${alert.targetPrice}!")
             }
+        }*/
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.notificationInterval.collectLatest { interval ->
+                    while (true) {
+                        viewModel.checkAlerts { alert ->
+                            showPriceAlertNotification(
+                                context = this@MainActivity,
+                                title = "Price Alert: ${alert.coinName}!",
+                                message = "It's time to buy! The price has reached the desired value ${alert.targetPrice}."
+                            )
+                        }
+                        delay(interval)
+                    }
+                }
+            }
         }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                while (true) {
-                    viewModel.checkAlerts { alert ->
-                        showPriceAlertNotification(
-                            context = this@MainActivity,
-                            title = "Price Alert: ${alert.coinName}",
-                            message = "Price reached ${alert.targetPrice}"
-                        )
+                viewModel.dataRefreshInterval.collectLatest { interval ->
+                    while (true) {
+                        println("Refresh Crypto data from interval...")
+                        viewModel.fetchCoins()
+                        delay(interval)
                     }
-                    delay(60_000) // Opakuj každou minutu
                 }
             }
         }
@@ -141,20 +160,27 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("notifications") {
+                            val selectedInterval = viewModel.notificationInterval.collectAsState().value
+                            val dataRefreshInterval = viewModel.dataRefreshInterval.collectAsState().value
+
                             NotificationsScreen(
                                 onBackClick = { navController.popBackStack() },
-                                shakeEnabled = viewModel.shakeEnabled.collectAsState().value,
-                                onShakeChange = { viewModel.setShakeEnabled(it) },
                                 priceAlerts = viewModel.priceAlerts.collectAsState().value,
                                 onAlertChange = { viewModel.addOrUpdatePriceAlert(it) },
                                 onAlertRemove = { viewModel.removePriceAlert(it) },
                                 onAlertAdd = { viewModel.addOrUpdatePriceAlert(it) },
-                                availableCoins = viewModel.coins.collectAsState().value
+                                availableCoins = viewModel.coins.collectAsState().value,
+                                selectedInterval = selectedInterval,
+                                onIntervalChange = { viewModel.setNotificationInterval(it) },
+                                dataRefreshInterval = dataRefreshInterval,
+                                onDataRefreshIntervalChange = { viewModel.setDataRefreshInterval(it) }
                             )
                         }
 
                         composable("settings") {
                             SettingsScreen(
+                                shakeEnabled = viewModel.shakeEnabled.collectAsState().value,
+                                onShakeChange = { viewModel.setShakeEnabled(it) },
                                 selectedCurrency = selectedCurrency,
                                 onCurrencyChange = { viewModel.setCurrency(it) },
                                 selectedThemeMode = selectedThemeMode,

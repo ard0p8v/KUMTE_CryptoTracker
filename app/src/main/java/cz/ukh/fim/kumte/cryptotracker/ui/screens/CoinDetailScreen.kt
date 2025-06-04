@@ -21,9 +21,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
 import com.patrykandpatrick.vico.compose.chart.Chart
@@ -76,8 +78,19 @@ fun CoinDetailScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
-                Text(text = detail.symbol.uppercase(), color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodySmall)
-                Text(text = detail.name, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AsyncImage(
+                        model = detail.image.large,
+                        contentDescription = "${detail.name} logo",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(end = 8.dp)
+                    )
+                    Column {
+                        Text(text = detail.name, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
+                        Text(text = detail.symbol.uppercase(), color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = detail.description["en"] ?: "No description available.", color = MaterialTheme.colorScheme.onBackground)
 
@@ -137,12 +150,17 @@ fun CoinDetailScreen(
                 val currencySuffix = selectedCurrency.uppercase()
 
                 Text(
-                    text = "Current Price: ${formatNumberWithSpace(currentPrice)} $currencySuffix",
-                    color = MaterialTheme.colorScheme.primary
+                    text = "Price: ${formatNumberWithSpace(currentPrice)} $currencySuffix",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 Text(
                     text = "Market Cap: ${formatNumberWithSpace(marketCap)} $currencySuffix",
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     text = "24h Change: ${String.format("%.2f", detail.marketData.priceChangePercentage24h)} %",

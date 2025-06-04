@@ -34,6 +34,12 @@ class CryptoViewModel : ViewModel() {
     private val _priceAlerts = MutableStateFlow<List<PriceAlert>>(emptyList())
     val priceAlerts: StateFlow<List<PriceAlert>> = _priceAlerts.asStateFlow()
 
+    private val _notificationInterval = MutableStateFlow(60_000L)
+    val notificationInterval: StateFlow<Long> = _notificationInterval
+
+    private val _dataRefreshInterval = MutableStateFlow(120_000L)
+    val dataRefreshInterval: StateFlow<Long> = _dataRefreshInterval
+
     init {
         fetchCoins()
         fetchCzkRate()
@@ -85,6 +91,14 @@ class CryptoViewModel : ViewModel() {
         _shakeEnabled.value = enabled
     }
 
+    fun setNotificationInterval(ms: Long) {
+        _notificationInterval.value = ms
+    }
+
+    fun setDataRefreshInterval(ms: Long) {
+        _dataRefreshInterval.value = ms
+    }
+
     fun addOrUpdatePriceAlert(alert: PriceAlert) {
         val updatedList = _priceAlerts.value.toMutableList()
         val index = updatedList.indexOfFirst { it.coinId == alert.coinId }
@@ -109,7 +123,7 @@ class CryptoViewModel : ViewModel() {
         for (alert in alerts) {
             val matchingCoin = currentPrices.find { it.id == alert.coinId }
             matchingCoin?.let { coin ->
-                if (coin.currentPrice >= alert.targetPrice) {
+                if (coin.currentPrice <= alert.targetPrice) {
                     onAlertTriggered(alert)
                 }
             }

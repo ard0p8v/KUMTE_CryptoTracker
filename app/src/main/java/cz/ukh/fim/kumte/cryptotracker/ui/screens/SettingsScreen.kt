@@ -2,7 +2,7 @@ package cz.ukh.fim.kumte.cryptotracker.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,22 +13,22 @@ import cz.ukh.fim.kumte.cryptotracker.viewmodel.ThemeMode
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    shakeEnabled: Boolean,
+    onShakeChange: (Boolean) -> Unit,
     selectedCurrency: String,
     onCurrencyChange: (String) -> Unit,
     selectedThemeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
     onBackClick: () -> Unit
 ) {
-    var notificationsEnabled by remember { mutableStateOf(true) }
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crypto Tracker settings", color = MaterialTheme.colorScheme.primary) },
+                title = { Text("Crypto Tracker Settings", color = MaterialTheme.colorScheme.primary) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
@@ -48,6 +48,24 @@ fun SettingsScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Shake to refresh crypto data", color = MaterialTheme.colorScheme.onBackground)
+                Switch(
+                    checked = shakeEnabled,
+                    onCheckedChange = onShakeChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                    )
+                )
+            }
+
             Text(
                 text = "Currency selection",
                 style = MaterialTheme.typography.titleMedium,
